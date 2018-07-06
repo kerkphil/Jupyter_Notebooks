@@ -1,0 +1,336 @@
+\documentclass[letterpaper,12pt]{article}
+
+\usepackage{amsmath, amsfonts, amscd, amssymb, amsthm}
+\usepackage{graphicx}
+%\usepackage{import}
+\usepackage{versions}
+\usepackage{crop}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{makeidx}
+\usepackage{hyperref}
+\usepackage{ifthen}
+\usepackage[format=hang,font=normalsize,labelfont=bf]{caption}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{placeins}
+\usepackage{framed}
+\usepackage{enumitem}
+\usepackage{threeparttable}
+\usepackage{geometry}
+\geometry{letterpaper,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage{array}
+\usepackage{delarray}
+\usepackage{lscape}
+\usepackage{float,color, colortbl}
+%\usepackage[pdftex]{graphicx}
+\usepackage{hyperref}
+\usepackage{tabu}
+\usepackage{appendix}
+\usepackage{listings}
+
+
+\include{thmstyle}
+%\bibliographystyle{econometrica}
+\providecommand{\abs}[1]{\lvert#1\rvert}
+\providecommand{\norm}[1]{\lVert#1\rVert}
+\newcommand{\ve}{\varepsilon}
+\newcommand{\ip}[2]{\langle #1,#2 \rangle}
+
+\hypersetup{colorlinks,linkcolor=red,urlcolor=blue,citecolor=red}
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}{Definition} % Number definitions on their own
+\newtheorem{derivation}{Derivation} % Number derivations on their own
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}{Proposition} % Number propositions on their own
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+%\numberwithin{equation}{document}
+\graphicspath{{./Figures/}}
+\renewcommand\theenumi{\roman{enumi}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\crop
+\makeindex
+
+
+\begin{document}
+
+\begin{titlepage}
+	\title{Interpreting an OLG Model in a DSGE Framework}
+\end{titlepage}
+
+\begin{spacing}{1.5}
+
+%section 1
+\section{A Simple DSGE Model}\label{Linear_LogLinApprox}
+	This is a simple DSGE model with infinitely-lived agents.
+
+	%subsection 1.1
+	\subsection{Household's Problem}
+		Households in this model hold capital ($k_t$) and an endowment of labor which is normalized by a choice of units to one. They earn a wage rate ($w_t$) payable on the portion of this labor endowment they choose to supply to the market, and generate utility with the remaining labor, which we can think of as leisure. They also earn a rental rate ($r_t$) on their capital, but lose a fraction ($\delta$) to depreciation. There is also a government in our version of the model, which is missing from Hansen's specification. The government taxes household income at a constant marginal rate ($\tau$) and refunds the proceeds lump-sum to the households in the form of a transfer ($T_t$). From this net income, households choose a consumption amount ($c_t$) and an amount of capital to carry over to the next period ($k_{t+1}$).
+
+		The dynamic program for the households is
+		\begin{equation}\label{VFHousehold}
+		 V(k_t;\theta_t) = \max_{k_{t+1}} u(c_t) + \beta E_t\{V(k_{t+1},\theta_{t+1})\}
+		\end{equation}
+		\begin{equation}\label{BCHousehold}
+		\text{s.t. } (1-\tau) \left[w_t+(r_t-\delta)k_t\right] + k_t + T_t = c_t+k_{t+1}
+		\end{equation}
+
+		We can dispense with the Lagrangian if we rewrite \eqref{BCHousehold} as
+		\begin{equation}\label{ConsDef}
+		c_t = (1-\tau) \left[w_t+(r_t-\delta)k_t\right] + k_t + T_t-k_{t+1}
+		\end{equation}
+		and substitute it into the utility function of \eqref{VFHousehold}.
+
+		The first order conditon from the problem is:
+		\begin{equation}\label{FOC2Household}
+		 -u_c(c_t) + \beta E_t\{V_k(k_{t+1},\theta_{t+1})\} = 0
+		\end{equation}
+
+		The envelope condition is :
+		\begin{equation}\label{EnvHousehold}
+		V_k(k_t;\theta_t) = u_c(c_t)[(r_t-\delta)(1-\tau)+1]
+		\end{equation}
+
+		Combining \eqref{FOC2Household} and \eqref{EnvHousehold} and rearranging terms gives us the intertemporal Euler equation.
+		\begin{equation}\label{Euler2Household}
+		u_c(c_t) = \beta E_t\left\{ u_c(c_{t+1})[(r_{t+1}-\delta)(1-\tau)+1] \right\}
+		\end{equation}
+
+	%subsection 1.2
+	\subsection{Firm's Problem}
+		A unit measure of firms arises spontaneously each period. Each firm rents capital and labor services from households. The objective is to maximize profits as shown.
+		\begin{equation}
+		\max_{K_t,L_t} \Pi_t = f(K_t,L_t,z_t) - W_tL_t-R_tK_t \nonumber
+		\end{equation}
+		where $K_t$ and $L_t$ are capital and labor hired, $R_t$ and $W_t$ are the factor prices, and $f(.)$ is the production function.
+
+		It yields the following first-order conditions:
+		\begin{equation}
+		R_t = f_K(K_t,L_t,z_t)
+		\end{equation}
+		\begin{equation}
+		W_t = f_L(K_t,L_t,z_t)
+		\end{equation}
+
+	%subsection 1.3
+	\subsection{Government}
+		The government collects distortionary taxes and refunds these to the households lump-sum:
+		\begin{equation}\label{GovtBC2Firm}
+		\tau \left[w_t\ell_t+(r_t-\delta)k_t\right] = T_t
+		\end{equation}
+
+	%subsection 1.4
+		\subsection{Adding-Up and Market Clearing}
+		Market clearing is:
+		\begin{equation}\label{LAdd}
+		1 = L_t
+		\end{equation}
+		\begin{equation}\label{KAdd}
+		k_t = K_t
+		\end{equation}
+
+		Price equivalences are:
+		\begin{equation}\label{WAdd}
+		w_t = W_t
+		\end{equation}
+		\begin{equation}\label{RAdd}
+		r_t  = R_t
+		\end{equation}
+
+	%subsection 1.5
+	\subsection{Exogenous Laws of Motion}
+		The stochastic process for the technology is shown below.
+		\begin{equation}\label{LoM}
+		z_t = (1-\rho_z)\bar z +  \rho_z z_{t-1}+ \epsilon^z_t ;\quad \epsilon^z_t\sim\text{i.i.d.}(0,\sigma_z^2)
+		\end{equation}
+
+	%subsection 1.6
+	\subsection{The Equilibrium}
+		The dynamic equilibrium for the model is defined by \eqref{ConsDef} and \eqref{Euler2Household} -- \eqref{LoM}, a system of eleven equations in eleven unknowns. We can simplify this, however, by using \eqref{WAdd} and \eqref{RAdd} as definitions to eliminate the variables $W_t$ and $R_t$. Similarly, \eqref{LAdd} and \eqref{KAdd} eliminate $L_t$ and $K_t$. This leaves us with seven equations in seven unknowns, $\{c_t,k_t,\ell_t,w_t,r_t,T_t\>\&\>z_t\}$. The equations are:
+
+		\begin{equation}\label{BC22Household}
+		c_t = (1-\tau) \left[w_t\ell_t+(r_t-\delta)k_t\right] + k_t + T_t-k_{t+1}
+		\end{equation}
+		\begin{equation}\label{Euler22Household}
+		u_c(c_t) = \beta E_t\left\{ u_c(c_{t+1})[(r_{t+1}-\delta)(1-\tau)+1] \right\}
+		\end{equation}
+		\begin{equation}\label{FOC012Firm}
+		r_t = f_K(k_t,z_t)
+		\end{equation}
+		\begin{equation}\label{FOC022Firm}
+		w_t = f_L(k_t,z_t)
+		\end{equation}
+		\begin{equation}\label{GovtTaxes}
+		\tau \left[w_t+(r_t-\delta)k_t\right] = T_t
+		\end{equation}
+		\begin{equation}\label{LoM2}
+		z_t = \rho_z z_{t-1}+ \epsilon^z_t ;\quad \epsilon^z_t\sim\text{i.i.d.}(0,\sigma_z^2)
+		\end{equation}
+
+	\subsection{Functional Forms}
+		We use the following functional form:
+		\begin{align}
+			u(c_t) & = \tfrac{1}{1-\sigma}(c_t^{1-\sigma} -1 ) \\
+			f(K_t,L_t,z_t) & = K_t^\alpha \left( e^{z_t} L_t \right)^{1-\alpha}
+		\end{align}
+
+	\subsection{Putting Our Model in a More General Notation}
+
+		The state of the economy is defined by $z_t$ and $k_{t-1}$. All other variables are jump variables. This gives us the following classifications:
+		\begin{equation}\label{XYZ}
+		\begin{split}
+		X_t & = \left[k_{t-1}\right] \\
+		Y_t & = \emptyset \\
+		Z_t & = \left[z_t\right] \\
+		D_t & = \left\{c_t,w_t,r_t,T_t\right\}
+		\end{split}
+		\end{equation}
+
+		Here $X_t$ is a vecetor of endogenous state variables, and $Z_t$ is a vector exogenous state variables.  $D_t$ is a set of non-state variables for which closed-form solutions can be found defining them as functions of $X_t$ and $Z_t$. $Y_t$ is a vector of non-state variables which are only implicity defined as functions of the state variables.
+
+		Equation \eqref{Euler22Household} can be written as:
+		\begin{equation}\label{GammaEqn}
+			E_t\left\{\Gamma\{X_{t+2},X_{t+1},X_{t},Y_{t+1},Y_{t},Z_{t+1},Z_{t}\} \right\}= 0
+		\end{equation}
+
+		And the law of motion in equation \eqref{LoM2}	can be written as:
+		\begin{equation}\label{Zlom}
+			Z_{t} = N Z_{t-1}+ E_t ;\quad E_t\sim\text{i.i.d.}(0,\Sigma^2)
+		\end{equation}
+
+		Our goal is the policy function:
+		\begin{equation}\label{HEqn}
+			X_{t+1} = H (X_t,Z_t)
+		\end{equation}
+		and the ``jump'' function
+		\begin{equation}\label{GEqn}
+			Y_{t} = G (X_t,Z_t)
+		\end{equation}
+
+\section{Linearization}
+	We can take the Taylor-series expansion of equation \eqref{GammaEqn} about the values $\bar X, \bar Y$ and $\bar Z$.  Denoting the deviation away from these steady state values with a tilde, so that $\tilde x_t \equiv x_t - \bar x$ this gives:
+	\begin{align}
+		& A \tilde X_{t+1} + B \tilde X_t + C \tilde Y_t + D \tilde Z_t = 0 \\
+		& E_t\left\{ F \tilde X_{t+2} + G \tilde X_{t+1} + H \tilde X_{t} + J \tilde Y_{t+1} + K \tilde Y_{t} + L \tilde Z_{t+1} + M \tilde Z_{t} \right\} = 0
+	\end{align}
+
+	These equations along with \eqref{Zlom} can be solved using the methods laid out in Uhlig(1991) for the following linear approximations to \eqref{HEqn} and \eqref{GEqn}.
+	\begin{align}
+		\tilde X_{t+1} & = P \tilde X_{t} + Q \tilde Z_{t} \\
+		\tilde Y_{t} & = R \tilde X_{t} + S \tilde Z_{t}
+	\end{align}
+
+	The LinApp toolkit available at https://github.com/kerkphil/DSGE-Utilities implement this solution.
+
+
+
+\section{An Overlapping Generations Model}
+	This model differs from the simple DSGE model above only in its specification of households.
+
+	Now we index households by age, denoted with an $s$ subscript.  The typical household problem can be written as:
+	\begin{equation}\label{VFHouseholdSpecOLG}
+		 V_s(k_{st};\theta_t) = \max_{k_{s+1,t+1}} u(c_{st}) + \beta E_t\{V_{s+1}(k_{s+1,t+1},\theta_{t+1})\}
+		\end{equation}
+		\begin{equation}\label{BCHouseholdSpecOLG}
+		\text{s.t. } (1-\tau) \left[w_t\ell_{s}+(r_t-\delta)k_{st}\right] + k_{st} + T_{st} = c_{st}+k_{s+1,t+1}
+	\end{equation}
+
+	The first-order conditon from the problem is:
+		\begin{equation}\label{FOC2HouseholdSpecOLG}
+		 -u_c(c_{st}) + \beta E_t\{V_{sk}(k_{s+1,t+1},\theta_{t+1})\} = 0
+		\end{equation}
+
+	The envelope condition is :
+	\begin{equation}\label{EnvHouseholdSpecOLG}
+		V_{sk}(k_{st};\theta_t) = u_c(c_{st})[(r_t-\delta)(1-\tau)+1]
+	\end{equation}
+
+	Combining \eqref{FOC2HouseholdSpecOLG} and \eqref{EnvHouseholdSpecOLG} and rearranging terms gives us the intertemporal Euler equation.
+	\begin{equation}\label{Euler2HouseholdSpecOLG}
+		u_c(c_{st}) = \beta E_t\left\{ u_c(c_{s+1,t+1})[(r_{t+1}-\delta)(1-\tau)+1] \right\}
+	\end{equation}
+
+	We can combine the various verisions of equations \eqref{Euler2HouseholdSpecOLG} by defining the following vectors:
+	\begin{align}
+		\mathbf{c}_t & \equiv \begin{bmatrix} c_{1t} & c_{2t} & \dots & c_{S-1,t} & c_{St} \end{bmatrix}^{'} \\
+		\mathbf{c}^-_t & \equiv \begin{bmatrix} c_{1t} & c_{2t} & \dots & c_{S-1,t} \end{bmatrix}^{'} \\
+		\mathbf{c}^+_t & \equiv \begin{bmatrix} c_{2t} & \dots & c_{S-1,t} & c_{St} \end{bmatrix}^{'} \\
+		\mathbf{k}_t & \equiv \begin{bmatrix} k_{2t} & \dots & k_{S-1,t} & k_{St} \end{bmatrix}^{'} \\
+		\mathbf{k}^-_t & \equiv \begin{bmatrix} 0 & k_{2t} & \dots & k_{S-1,t} & k_{St} \end{bmatrix}^{'} \\
+		\mathbf{k}^+_t & \equiv \begin{bmatrix} k_{2t} & \dots & k_{S-1,t} & k_{St} & 0 \end{bmatrix}^{'} \\
+		\mathbf{T}_t & \equiv \begin{bmatrix} T_{1t} & T_{2t} & \dots & T_{S-1,t} & T_{St} \end{bmatrix}^{'} \\
+		\mathbf{l} & \equiv \begin{bmatrix} \ell_{1} & \ell_{2} & \dots & \ell_{S-1} & \ell_{S} \end{bmatrix}^{'}
+	\end{align}
+
+	The Euler equation now can be written as:
+	\begin{align}
+		\mathbf{U}_c(\mathbf{c}^-_{t})  & = \beta E_t\left\{ \mathbf{u}_c(\mathbf{c}^+_{t+1})[(r_{t+1}-\delta)(1-\tau)+1] \right\} 
+	\end{align}
+
+	The budget constraints can be written as:
+	\begin{equation}
+		(1-\tau) \left[w_t \mathbf{l}_{t}+(r_t-\delta)\mathbf{k}^-_{t}\right] + \mathbf{k}^-_{t} + \mathbf{T}_{t} = \mathbf{c}_{t}+\mathbf{k}^+_{t+1}
+	\end{equation}
+
+	We retain the following equations from the firms and government.
+	\begin{align}
+		r_t & = f_K(K_t,L_t,z_t) \\
+		w_t & = f_L(K_t,L_t,z_t)
+	\end{align}
+
+	The government's buget constraint becomes
+	\begin{equation}
+		\mathbf{1}_{1 \times S} \tau \left[w_t \mathbf{L}_t+(r_t-\delta)\mathbf{k}^-_t\right]  = \mathbf{1}_{1 \times S} \mathbf{T}_t
+	\end{equation}
+
+	And market clearing conditions are:
+	\begin{align}
+		\mathbf{1}_{1 \times (S-1)} \mathbf{k}^-_t = K_t \\
+		\mathbf{1}_{1 \times S} \mathbf{l} = L
+	\end{align}
+
+	Finally, we also need an allocation rule for the lump-sum transfers across ages.  A simple one would be to make the same transfer to each age cohort so that:
+	\begin{equation}
+		\mathbf{T}_t = \tfrac{1}{S} \mathbf{1}_{S \times 1} T_t
+	\end{equation}
+
+	This system can be solved and simulated the same as the infintinely-lived-agent DSGE model with the following mappings.
+
+	\begin{equation}\label{XYZolg}
+		\begin{split}
+			X_t & = \left[\mathbf{k}_{t-1}\right] \\
+			Y_t & = \emptyset \\
+			Z_t & = \left[z_t\right] \\
+			D_t & = \left\{\mathbf{c}_t,w_t,r_t,T_t\right\}
+		\end{split}
+	\end{equation}
+
+	
+\end{spacing}
+{}
+\newpage
+{}
+\bibliography{BootCampText}
+
+\end{document}
