@@ -4,6 +4,8 @@ MATLAB version 1.0 written by Kerk Phillips, April 2014
 PYTHON version adapted by Yulong Li, November 2015 
 
 updates 20 Nov 2017 by Kerk Phillips
+
+additional updates 22 May 2020 by Kerk Phillips
 '''
 
 import numpy as np
@@ -65,7 +67,7 @@ def LinApp_FindSS(funcname, param, guessXY, Zbar, nx, ny):
 #	'''
     f = lambda XYbar: steady(XYbar, Zbar, funcname, param, nx, ny)
     XYbar = opt.fsolve(f, guessXY)
-
+    
     return XYbar
 
 
@@ -322,13 +324,13 @@ def LinApp_Solve(AA, BB, CC, DD, FF, GG, HH, JJ, KK, LL, MM, NN, Z0, Sylv):
     QQ and UU for X, and RR, SS and VV for Y.
 
     Inputs overview:
-    The matrices of derivatives: AA - TT.
+    The matrices of derivatives: AA - MM.
     The autoregression coefficient matrix NN from the law of motion for Z.
     Z0 is the Z-point about which the linearization is taken.  For
     linearizing about the steady state this is Zbar and normally Zbar = 0.
     Sylv is an indicator variable telling the program to use the built-in
     function sylvester() to solve for QQ and SS, if possible.  Default is
-    to use Sylv=1.
+    to use Sylv=1.  This option is now disabled and we always set Sylv=1.
 
     Parameters
     ----------
@@ -407,6 +409,10 @@ def LinApp_Solve(AA, BB, CC, DD, FF, GG, HH, JJ, KK, LL, MM, NN, Z0, Sylv):
        University Press.
 
     """
+    # The coding for Uhlig's solution for QQ and SS gives incorrect results
+    # So we will use numpy's Sylvester equation solver regardless of the value
+    #  chosen for Sylv
+    
     #The original coding we did used the np.matrix form for our matrices so we
     #make sure to set our inputs to numpy matrices.
     AA = np.matrix(AA)
@@ -477,7 +483,6 @@ def LinApp_Solve(AA, BB, CC, DD, FF, GG, HH, JJ, KK, LL, MM, NN, Z0, Sylv):
 
     # From here to line 158 we Diagonalize Xi, form Lambda/Omega and find P.
     else:
-        Xi_sortabs = np.sort(abs(eVals))
         Xi_sortindex = np.argsort(abs(eVals))
         Xi_sortedVec = np.array([eVecs[:, i] for i in Xi_sortindex]).T
         Xi_sortval = eVals[Xi_sortindex]
@@ -514,7 +519,6 @@ def LinApp_Solve(AA, BB, CC, DD, FF, GG, HH, JJ, KK, LL, MM, NN, Z0, Sylv):
             Delta_up,Xi_up,UUU,VVV=la.qz(Delta_mat,Xi_mat, output='complex')
             UUU=UUU.T
             Xi_eigval = np.diag( np.diag(Xi_up)/np.maximum(np.diag(Delta_up),TOL))
-            Xi_sortabs= np.sort(abs(np.diag(Xi_eigval)))
             Xi_sortindex= np.argsort(abs(np.diag(Xi_eigval)))
             Xi_sortval = Xi_eigval[Xi_sortindex, Xi_sortindex]
             Xi_select = np.arange(0, nx)
@@ -583,107 +587,45 @@ def LinApp_Solve(AA, BB, CC, DD, FF, GG, HH, JJ, KK, LL, MM, NN, Z0, Sylv):
             if (sum(sum(abs(PP_imag))) / sum(sum(abs(PP))) > .000001).any():
                 print("A lot of P is complex. We will continue with the" +
                       " real part and hope we don't lose too much information.")
-    # The code from here to the end was from he Uhlig file calc_qrs.m.
-    # I think for python it fits better here than in a separate file.
 
-    # The if and else below make RR and VV depending on our model's setup.
+    # The if and else below make RR depending on our model's setup.
     if l_equ == 0:
-        RR = zeros((0, nx))
-        VV = hstack((kron(NN.T, FF) + kron(eye(nz), \
-            (dot(FF, PP) + GG)), kron(NN.T, JJ) + kron(eye(nz), KK))) 
-
+        RR = zeros((0, nx)) #empty matrix
     else:
         RR = - dot(CC_plus, (dot(AA, PP) + BB))
-        VV = sp.vstack((hstack((kron(eye(nz), AA), \
-                        kron(eye(nz), CC))), hstack((kron(NN.T, FF) +\
-                        kron(eye(nz), dot(FF, PP) + dot(JJ, RR) + GG),\
-                        kron(NN.T, JJ) + kron(eye(nz), KK)))))
 
-    # Now we use LL, NN, RR, VV to get the QQ, RR, SS, VV matrices.
-    # first try using Sylvester equation solver
-    if Sylv:
-        if ny>0:
-            PM = (FF-la.solve(JJ.dot(CC),AA))
-            if npla.matrix_rank(PM)< nx+ny:
-                Sylv=0
-                print("Sylvester equation solver condition is not satisfied;"\
-                        +" proceed with the original method...")
-        else:
-            if npla.matrix_rank(FF)< nx:
-                Sylv=0
-                print("Sylvester equation solver condition is not satisfied;"\
-                        +" proceed with the original method...")
-        print("Using Sylvester equation solver...")
-        if ny>0:
-            Anew = la.solve(PM, (FF.dot(PP)+GG+JJ.dot(RR)-\
-                    la.solve(KK.dot(CC), AA)) )
-            Bnew = NN
-            Cnew1 = la.solve(JJ.dot(CC),DD.dot(NN))+la.solve(KK.dot(CC), DD)-\
-                    LL.dot(NN)-MM
-            Cnew = la.solve(PM, Cnew1)
-            QQ = la.solve_sylvester(Anew,Bnew,Cnew)
-            SS = la.solve(-CC, (AA.dot(QQ)+DD))
-        else:
-            Anew = la.solve(FF, (FF.dot(PP)+GG))
-            Bnew = NN
-            Cnew = la.solve(FF, (-LL.dot(NN)-MM))
-            QQ = la.solve_sylvester(Anew,Bnew,Cnew)
-            SS = np.zeros((0,nz)) #empty matrix
-    
-    # then the Uhlig's way
+    # Now we use Sylvester equation solver to find QQ and SS matrices.
+    '''
+    This code written by Kerk Phillips 2020
+    '''
+
+    CCinv = npla.inv(CC)
+    if ny>0:
+        PM = npla.inv(FF-np.matmul(np.matmul(JJ,CCinv), AA))
+        if npla.matrix_rank(PM)< nx+ny:
+            print("Sylvester equation solver condition is not satisfied")
     else:
-        '''
-        # This code is from Spencer Lypn's 2012 version
-        q_eqns = sp.shape(FF)[0]
-        m_states = sp.shape(FF)[1]
-        l_equ = sp.shape(CC)[0]
-        n_endog = sp.shape(CC)[1]
-        k_exog = min(sp.shape(sp.mat(NN))[0], sp.shape(sp.mat(NN))[1])
-        sp.mat(LL.T)
-        sp.mat(NN)
-        sp.dot(sp.mat(LL),sp.mat(NN))
-        LLNN_plus_MM = sp.dot(sp.mat(LL),sp.mat(NN)) + sp.mat(MM.T)
-        QQSS_vec = sp.dot(la.inv(sp.mat(VV)), sp.mat(LLNN_plus_MM))
-        QQSS_vec = -QQSS_vec
-        if max(abs(QQSS_vec)) == sp.inf:
-            print("We have issues with Q and S. Entries are undefined. Probably
-            because V is no inverible.")
-        
-        QQ = sp.reshape(QQSS_vec[0:m_states*k_exog],(m_states,k_exog))
-        SS = sp.reshape(QQSS_vec[(m_states*k_exog):((m_states+n_endog)*k_exog)]
-            ,(n_endog,k_exog))    
-        '''
-        
-        # this code is from Yulong Li's 2015 version
-        if (npla.matrix_rank(VV) < nz * (nx + ny)):
-            print("Sorry but V is not invertible. Can't solve for Q and S;"+
-                     " but we proceed anyways...")
-        
-        LL = sp.mat(LL)
-        NN = sp.mat(NN)
-        LLNN_plus_MM = dot(LL, NN) + MM
-
-        if DD.any():
-            impvec = vstack([DD, LLNN_plus_MM])
-        else:
-            impvec = LLNN_plus_MM
-
-        impvec = np.reshape(impvec, ((nx + ny) * nz, 1), 'F')
-        
-        QQSS_vec = np.matrix(la.solve(-VV, impvec))
-
-        if (max(abs(QQSS_vec)) == sp.inf).any():
-            print("We have issues with Q and S. Entries are undefined." +
-                      " Probably because V is no inverible.")
-
-        #Build QQ SS
-        QQ = np.reshape(np.matrix(QQSS_vec[0:nx * nz, 0]),
-                            (nx, nz), 'F')
-
-        SS = np.reshape(QQSS_vec[(nx * nz):((nx + ny) * nz), 0],\
-                            (ny, nz), 'F')
-        
-
+        PM = npla.inv(FF)
+        if npla.matrix_rank(FF)< nx:
+            print("Sylvester equation solver condition is not satisfied")
+    if ny>0:
+        JCAP = np.matmul(np.matmul(JJ,CCinv), np.matmul(AA,PP))
+        JCB = np.matmul(np.matmul(JJ,CCinv), BB)
+        KCA = np.matmul(np.matmul(KK,CCinv), AA)
+        KCD = np.matmul(np.matmul(KK,CCinv), DD)
+        JCDN = np.matmul(np.matmul(JJ,CCinv), np.matmul(DD,NN))
+        Anew = PM.dot(FF.dot(PP) + GG - JCAP - JCB - KCA)
+        Bnew = NN
+        Cnew = PM.dot(KCD - LL.dot(NN) + JCDN - MM)
+        QQ = la.solve_sylvester(Anew,Bnew,Cnew)
+        SS = la.solve(-CC, (AA.dot(QQ)+DD))
+    else:
+        Anew = PM.dot(FF.dot(PP) + GG)
+        Bnew = NN
+        Cnew = PM.dot(- LL.dot(NN) - MM)
+        QQ = la.solve_sylvester(Anew,Bnew,Cnew)
+        SS = np.zeros((0,nz)) #empty matrix
+    
     return np.array(PP), np.array(QQ), np.array(RR), np.array(SS)
 
 
